@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 from utils.rands import new_slug
+from utils.resize_image import resize_img
 
 
 # Create your models here.
@@ -95,7 +96,18 @@ class Post(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = new_slug(self.title, k=5)
-        return super().save(*args, **kwargs)
+
+        current_cover_name = str(self.cover.name)
+        super_save = super().save(*args, **kwargs)
+        cover_changed = False
+
+        if self.cover:
+            cover_changed = current_cover_name != self.cover.name
+
+        if cover_changed:
+            resize_img(self.cover, 900, otimize=True, quality=75)
+
+        return super_save
 
     def __str__(self) -> str:
         return self.title
