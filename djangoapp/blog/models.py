@@ -4,8 +4,14 @@ from django_summernote.models import AbstractAttachment
 from utils.rands import new_slug
 from utils.resize_image import resize_img
 
-
 # Create your models here.
+
+
+class PostManager(models.Manager):
+    def get_is_published(self):
+        return self.filter(is_published=True).order_by('-pk')
+
+
 class PostAttachment(AbstractAttachment):
     def save(self, *args, **kwargs):
         if not self.name:
@@ -85,6 +91,8 @@ class Post(models.Model):
     class Meta:
         verbose_name = 'Post'
         verbose_name_plural = 'Posts'
+
+    objects = PostManager()
 
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, default='', null=True,
