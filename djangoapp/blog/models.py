@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 from django_summernote.models import AbstractAttachment
 from utils.rands import new_slug
 from utils.resize_image import resize_img
@@ -119,6 +120,11 @@ class Post(models.Model):
     updated_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name='post_updated_by',
         blank=True, null=True)
+
+    def get_absolute_url(self):
+        if not self.is_published:
+            return reverse('blog:index')
+        return reverse('blog:post', args=(self.slug, ))
 
     def save(self, *args, **kwargs):
         if not self.slug:
