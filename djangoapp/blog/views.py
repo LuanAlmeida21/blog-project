@@ -20,6 +20,36 @@ def index(request):
     )
 
 
+def created_by(request, author_pk):
+    posts = Post.objects.get_is_published().filter(created_by__pk=author_pk)
+    paginator = Paginator(posts, COUNT_PAGE)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        'blog/pages/index.html',
+        {
+            'page_obj': page_obj,
+        }
+    )
+
+
+def category(request, category_pk):
+    posts = Post.objects.get_is_published().filter(category__pk=category_pk)
+    paginator = Paginator(posts, COUNT_PAGE)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        'blog/pages/index.html',
+        {
+            'page_obj': page_obj,
+        }
+    )
+
+
 def page(request):
 
     return render(
