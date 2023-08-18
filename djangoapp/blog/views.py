@@ -4,8 +4,26 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import render
+from django.views.generic import ListView
 
 COUNT_PAGE = 9
+
+
+class PostListView(ListView):
+    model = Post
+    context_object_name = 'posts'
+    template_name = 'blog/pages/index.html'
+    ordering = ['-pk']
+    paginate_by = COUNT_PAGE
+    queryset = Post.objects.get_is_published()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'site_title': 'Home'
+        }
+        )
+        return context
 
 
 def index(request):
