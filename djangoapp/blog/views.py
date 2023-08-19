@@ -1,3 +1,4 @@
+# flake8: noqa
 from typing import Any
 
 from blog.models import Page, Post
@@ -67,25 +68,35 @@ class CreatedByListView(PostListView):
         return qs
 
 
-def category(request, slug):
-    posts = Post.objects.get_is_published().filter(category__slug=slug)
-    paginator = Paginator(posts, COUNT_PAGE)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+class CategoryListView(PostListView):
+    allow_empty = False
 
-    if len(page_obj) == 0:
-        raise Http404
+    def get_queryset(self):
+        return super().get_queryset().filter(category__slug=self.kwargs.get('slug'))
 
-    site_title = f'{page_obj[0].category.name} - Categoria'
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        site_title = f'{self.object_list[0].category.name} - Categoria'  # type: ignore
+        ctx.update({
+            'site_title': site_title
+        })
+        return ctx
 
-    return render(
-        request,
-        'blog/pages/index.html',
-        {
-            'page_obj': page_obj,
-            'site_title': site_title,
-        }
-    )
+
+class TagsListView(PostListView):
+    allow_empty = False
+
+    def get_queryset(self) -> QuerySet[Any]:
+        return super().get_queryset().filter(tags__slug=self.kwargs.get('slug'))
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        print(ctx)
+        site_title = f'{self.object_list[0].tags.first().name} - Tags'  # type: ignore
+        ctx.update({
+            'site_title': site_title
+        })
+        return ctx
 
 
 def tags(request, slug):
