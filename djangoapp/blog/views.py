@@ -1,15 +1,14 @@
 # flake8: noqa
-from typing import Any
+from typing import Any, Dict
 
 from blog.models import Page, Post
-from django import http
 from django.contrib.auth.models import User
-from django.core.paginator import Paginator
+from django.db import models
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from django.http import Http404, HttpRequest, HttpResponse
+from django.http import Http404
 from django.shortcuts import redirect, render
-from django.views.generic import ListView
+from django.views.generic import DetailView, ListView
 
 COUNT_PAGE = 9
 
@@ -134,25 +133,23 @@ class SearchListView(PostListView):
         return super().get(request, *args, **kwargs)
 
 
-def search(request):
-    search_value = request.GET.get('search', '').strip()
-    posts = Post.objects.get_is_published().filter(
-        Q(title__icontains=search_value) |
-        Q(content__icontains=search_value) |
-        Q(excerpt__icontains=search_value)
-    )[:COUNT_PAGE]
+class PageDetailView(DetailView):
+    model = Page
+    template_name = 'blog/pages/page.html'
+    slug_field = 'slug'
+    context_object_name = 'page'
 
-    site_title = f'{search_value[:30]} - Search'
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        page = self.get_object()
+        site_title = f'{page} - Página'
+        ctx.update({
+            'site_title': site_title
+        })
+        return ctx
 
-    return render(
-        request,
-        'blog/pages/index.html',
-        {
-            'page_obj': posts,
-            'search_value': search_value,
-            'site_title': site_title,
-        }
-    )
+    def get_queryset(self) -> QuerySet[Any]:
+        return super().get_queryset().filter(is_published=True)
 
 
 def page(request, slug):
@@ -172,6 +169,22 @@ def page(request, slug):
             'site_title': site_title,
         }
     )
+
+
+class PostDetailView(DetailView):
+    model = Post
+    template_name = 'blog/pages/post.html'
+    slug_field = 'slug'
+    context_object_name = 'post'
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)
+        post = self.get_object()
+        site_title = f'{post} - Post'
+        ctx.update({
+            'site_title': site_title
+        })
+        return ctx
 
 
 def post(request, slug):
